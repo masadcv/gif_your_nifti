@@ -166,7 +166,7 @@ def create_mosaic_RGB(out_img1, out_img2, out_img3, maximum):
     return out_img
 
 
-def write_gif_normal(filename, size=1, fps=18):
+def write_gif_normal(filename, size=1, fps=18, out_filename=None):
     """Procedure for writing grayscale image.
 
     Parameters
@@ -189,11 +189,15 @@ def write_gif_normal(filename, size=1, fps=18):
     ext = '.{}'.format(parse_filename(filename)[2])
 
     # Write gif file
-    mimwrite(filename.replace(ext, '.gif'), new_img,
+    if out_filename:
+        mimwrite(out_filename, new_img,
+                format='gif', fps=int(fps * size))
+    else:
+        mimwrite(filename.replace(ext, '.gif'), new_img,
              format='gif', fps=int(fps * size))
 
 
-def write_gif_depth(filename, size=1, fps=18):
+def write_gif_depth(filename, size=1, fps=18, out_filename=None):
     """Procedure for writing depth image.
 
     The image shows you in color what the value of the next slice will be. If
@@ -221,7 +225,11 @@ def write_gif_depth(filename, size=1, fps=18):
     ext = '.{}'.format(parse_filename(filename)[2])
 
     # Write gif file
-    mimwrite(filename.replace(ext, '_depth.gif'), new_img,
+    if out_filename:
+        mimwrite(out_filename, new_img,
+                format='gif', fps=int(fps * size))
+    else:
+        mimwrite(filename.replace(ext, '_depth.gif'), new_img,
              format='gif', fps=int(fps * size))
 
 
@@ -263,7 +271,7 @@ def write_gif_rgb(filename1, filename2, filename3, size=1, fps=18):
     mimwrite(out_path, new_img, format='gif', fps=int(fps * size))
 
 
-def write_gif_pseudocolor(filename, size=1, fps=18, colormap='hot'):
+def write_gif_pseudocolor(filename, size=1, fps=18, colormap='hot', out_filename=None):
     """Procedure for writing pseudo color image.
 
     The colormap can be any colormap from matplotlib.
@@ -293,6 +301,11 @@ def write_gif_pseudocolor(filename, size=1, fps=18, colormap='hot'):
 
     # Figure out extension
     ext = '.{}'.format(parse_filename(filename)[2])
+    
     # Write gif file
-    mimwrite(filename.replace(ext, '_{}.gif'.format(colormap)),
+    if out_filename:
+        mimwrite(out_filename,
+                cmap_img, format='gif', fps=int(fps * size))
+    else:
+        mimwrite(filename.replace(ext, '_{}.gif'.format(colormap)),
              cmap_img, format='gif', fps=int(fps * size))
