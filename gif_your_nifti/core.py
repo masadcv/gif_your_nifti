@@ -73,6 +73,45 @@ def load_and_prepare_image(filename, size=1):
 
     return out_img, maximum
 
+def load_and_prepare_axial_image(filename, size=1):
+    """Load and prepare image data.
+
+    Parameters
+    ----------
+    filename1: str
+        Input file (eg. /john/home/image.nii.gz)
+    size: float
+        Image resizing factor.
+
+    Returns
+    -------
+    out_img: numpy array
+
+    """
+    # Load NIfTI file
+    data = nb.load(filename).get_data()
+
+    # Pad data array with zeros to make the shape isometric
+    maximum = np.max(data.shape)
+
+    # out_img = np.zeros([maximum] * 3)
+
+    # a, b, c = data.shape
+    # x, y, z = (list(data.shape) - maximum) / -2
+
+    # out_img[int(x):a + int(x),
+    #         int(y):b + int(y),
+    #         int(z):c + int(z)] = data
+
+    data /= data.max()  # scale image values between 0-1
+
+    # Resize image by the following factor
+    if size != 1:
+        data = resize(data, [int(size * x) for x in data.shape])
+
+    # maximum = int(maximum * size)
+
+    return data
 
 def create_mosaic_normal(out_img, maximum):
     """Create grayscale image.
@@ -97,6 +136,15 @@ def create_mosaic_normal(out_img, maximum):
 
     return new_img
 
+def create_axial_only(out_img):
+    _, _, axlength = out_img.shape
+
+    new_img = np.array(
+        # [np.flip(out_img[:, :, i], 1).T for i in range(axlength)]
+        [out_img[:, :, i].T for i in reversed(range(axlength))]
+    )
+
+    return new_img
 
 def create_mosaic_depth(out_img, maximum):
     """Create an image with concurrent slices represented with colors.
@@ -189,6 +237,38 @@ def write_gif_normal(filename, size=1, fps=18, out_filename=None):
     ext = '.{}'.format(parse_filename(filename)[2])
 
     # Write gif file
+    if out_filename:
+        mimwrite(out_filename, new_img,
+                format='gif', fps=int(fps * size))
+    else:
+        mimwrite(filename.replace(ext, '.gif'), new_img,
+             format='gif', fps=int(fps * size))
+
+def write_axial_gif_normal(filename, size=1, duration=4, out_filename=None):
+    """Procedure for writing grayscale image.
+    Only writes axial image
+
+    Parameters
+    ----------
+    filename: str
+        Input file (eg. /john/home/image.nii.gz)
+    size: float
+        Between 0 and 1.
+    fps: int
+        Frames per second
+
+    """
+    # Load NIfTI and put it in right shape
+    out_img = load_and_prepare_axial_image(filename, size)
+
+    # Create output mosaic
+    new_img = create_axial_only(out_img)
+
+    # Figure out extension
+    ext = '.{}'.format(parse_filename(filename)[2])
+
+    # Write gif file
+    fps = int(len(new_img)/duration)
     if out_filename:
         mimwrite(out_filename, new_img,
                 format='gif', fps=int(fps * size))
@@ -301,7 +381,7 @@ def write_gif_pseudocolor(filename, size=1, fps=18, colormap='hot', out_filename
 
     # Figure out extension
     ext = '.{}'.format(parse_filename(filename)[2])
-    
+
     # Write gif file
     if out_filename:
         mimwrite(out_filename,
